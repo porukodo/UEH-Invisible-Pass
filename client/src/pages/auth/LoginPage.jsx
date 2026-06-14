@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../api/client';
 import AuthLayout from './AuthLayout';
 
 export default function LoginPage() {
@@ -16,20 +17,25 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
-      navigate('/verify-login-otp', { state: { email } });
+      const res = await login(email, password);
+      navigate('/verify-login-otp', { state: { email, devOtp: res?.devOtp } });
     } catch (err) {
-      setError(err.response?.data?.error || 'Dang nhap khong thanh cong');
+      const data = err.response?.data;
+      if (data?.requiresVerification) {
+        navigate('/verify-email', { state: { email: data.email, devOtp: data.devOtp } });
+        return;
+      }
+      setError(data?.error || 'Đăng nhập không thành công');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AuthLayout title="Dang nhap" subtitle="UEH Invisible Pass">
+    <AuthLayout title="Đăng nhập" subtitle="UEH Invisible Pass">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-xs font-bold text-slate-500">Email sinh vien</label>
+          <label className="text-xs font-bold text-slate-500">Email sinh viên</label>
           <input
             type="email"
             required
@@ -40,7 +46,7 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="text-xs font-bold text-slate-500">Mat khau</label>
+          <label className="text-xs font-bold text-slate-500">Mật khẩu</label>
           <input
             type="password"
             required
@@ -55,13 +61,13 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full h-12 bg-ueh-green text-white rounded-xl font-bold shadow-lg active:scale-[0.98] transition-all disabled:opacity-60"
         >
-          {loading ? 'Dang xu ly...' : 'Dang nhap'}
+          {loading ? 'Đang xử lý...' : 'Đăng nhập'}
         </button>
       </form>
       <p className="text-center text-xs text-slate-400">
-        Chua co tai khoan?{' '}
+        Chưa có tài khoản?{' '}
         <Link to="/register" className="text-ueh-orange font-bold">
-          Dang ky
+          Đăng ký
         </Link>
       </p>
     </AuthLayout>

@@ -2,10 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { Wallet, QrCode, CreditCard, User } from 'lucide-react';
 
 const tabs = [
-  { to: '/', label: 'Vi', icon: Wallet },
-  { to: '/topup', label: 'Nap tien', icon: CreditCard },
-  { to: '/qr', label: 'The QR', icon: QrCode },
-  { to: '/profile', label: 'Tai khoan', icon: User },
+  { to: '/', label: 'Ví', icon: Wallet },
+  { to: '/topup', label: 'Nạp tiền', icon: CreditCard },
+  { to: '/qr', label: 'Thẻ QR', icon: QrCode },
+  { to: '/profile', label: 'Tài khoản', icon: User },
 ];
 
 export default function BottomNav() {

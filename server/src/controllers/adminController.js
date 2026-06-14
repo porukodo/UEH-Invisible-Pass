@@ -29,22 +29,22 @@ export async function manualAdjustment(req, res, next) {
   try {
     const { mssv, amount, description } = req.body;
     const amt = Number(amount);
-    if (!mssv || !amt) throw new ApiError(400, 'Thieu mssv hoac amount');
+    if (!mssv || !amt) throw new ApiError(400, 'Thiếu MSSV hoặc số tiền');
 
     const user = await findUserByMssv(mssv);
-    if (!user) throw new ApiError(404, 'Khong tim thay sinh vien');
+    if (!user) throw new ApiError(404, 'Không tìm thấy sinh viên');
 
     const { transactionId, balance } = await applyLedgerEntry({
       userId: user.id,
       type: 'adjustment',
       amount: amt,
-      description: description || 'Dieu chinh boi nhan vien',
+      description: description || 'Điều chỉnh bởi nhân viên',
       createdBy: req.user.id,
     });
 
     res.json({ transactionId, balance });
   } catch (err) {
-    if (err.code === 'INSUFFICIENT_BALANCE') return next(new ApiError(402, 'So du khong du de tru'));
+    if (err.code === 'INSUFFICIENT_BALANCE') return next(new ApiError(402, 'Số dư không đủ để trừ'));
     next(err);
   }
 }
@@ -54,7 +54,7 @@ export async function manualGateOpen(req, res, next) {
   try {
     const { gateId } = req.body;
     const gate = await findGateById(gateId);
-    if (!gate) throw new ApiError(404, 'Khong tim thay cong');
+    if (!gate) throw new ApiError(404, 'Không tìm thấy cổng');
 
     await emitToGate(gateId, 'GATE_OPEN', {
       gateId,
@@ -79,14 +79,14 @@ export async function exportReport(req, res, next) {
     sheet.columns = [
       { header: 'Transaction ID', key: 'id', width: 15 },
       { header: 'MSSV', key: 'mssv', width: 15 },
-      { header: 'Ho ten', key: 'full_name', width: 25 },
-      { header: 'Loai', key: 'type', width: 12 },
-      { header: 'So tien', key: 'amount', width: 15 },
-      { header: 'So du sau GD', key: 'balance_after', width: 15 },
-      { header: 'Trang thai', key: 'status', width: 12 },
-      { header: 'Ma tham chieu', key: 'gateway_ref', width: 25 },
-      { header: 'Mo ta', key: 'description', width: 30 },
-      { header: 'Thoi gian', key: 'created_at', width: 22 },
+      { header: 'Họ tên', key: 'full_name', width: 25 },
+      { header: 'Loại', key: 'type', width: 12 },
+      { header: 'Số tiền', key: 'amount', width: 15 },
+      { header: 'Số dư sau GD', key: 'balance_after', width: 15 },
+      { header: 'Trạng thái', key: 'status', width: 12 },
+      { header: 'Mã tham chiếu', key: 'gateway_ref', width: 25 },
+      { header: 'Mô tả', key: 'description', width: 30 },
+      { header: 'Thời gian', key: 'created_at', width: 22 },
     ];
     sheet.addRows(transactions);
 

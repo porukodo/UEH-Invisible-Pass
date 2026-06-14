@@ -18,30 +18,30 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      await api.post('/auth/register', form);
-      navigate('/verify-email', { state: { email: form.email } });
+      const { data } = await api.post('/auth/register', form);
+      navigate('/verify-email', { state: { email: form.email, devOtp: data.devOtp } });
     } catch (err) {
-      setError(err.response?.data?.error || 'Dang ky khong thanh cong');
+      setError(err.response?.data?.error || 'Đăng ký không thành công');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AuthLayout title="Dang ky tai khoan" subtitle="Danh cho sinh vien UEH (@st.ueh.edu.vn)">
+    <AuthLayout title="Đăng ký tài khoản" subtitle="Dành cho sinh viên UEH (@st.ueh.edu.vn)">
       <form onSubmit={handleSubmit} className="space-y-3">
         <Field label="MSSV" value={form.mssv} onChange={(v) => update('mssv', v)} required />
-        <Field label="Ho va ten" value={form.fullName} onChange={(v) => update('fullName', v)} required />
+        <Field label="Họ và tên" value={form.fullName} onChange={(v) => update('fullName', v)} required />
         <Field
-          label="Email sinh vien"
+          label="Email sinh viên"
           type="email"
           value={form.email}
           onChange={(v) => update('email', v)}
           placeholder="ten@st.ueh.edu.vn"
           required
         />
-        <Field label="Mat khau" type="password" value={form.password} onChange={(v) => update('password', v)} required />
-        <Field label="Bien so xe (tuy chon)" value={form.licensePlate} onChange={(v) => update('licensePlate', v)} />
+        <Field label="Mật khẩu" type="password" value={form.password} onChange={(v) => update('password', v)} required />
+        <Field label="Biển số xe (tuỳ chọn)" value={form.licensePlate} onChange={(v) => update('licensePlate', v)} />
 
         {error && <p className="text-xs text-rose-500 font-medium">{error}</p>}
 
@@ -50,13 +50,13 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full h-12 bg-ueh-green text-white rounded-xl font-bold shadow-lg active:scale-[0.98] transition-all disabled:opacity-60"
         >
-          {loading ? 'Dang xu ly...' : 'Dang ky'}
+          {loading ? 'Đang xử lý...' : 'Đăng ký'}
         </button>
       </form>
       <p className="text-center text-xs text-slate-400">
-        Da co tai khoan?{' '}
+        Đã có tài khoản?{' '}
         <Link to="/login" className="text-ueh-orange font-bold">
-          Dang nhap
+          Đăng nhập
         </Link>
       </p>
     </AuthLayout>

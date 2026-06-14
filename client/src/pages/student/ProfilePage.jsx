@@ -25,15 +25,15 @@ export default function ProfilePage() {
 
       <div className="bg-white rounded-2xl shadow-card border border-slate-50 overflow-hidden">
         <InfoRow icon={Mail} label="Email" value={user?.email} />
-        <InfoRow icon={IdCard} label="Vai tro" value={user?.role} />
-        <InfoRow icon={Car} label="Bien so xe" value={user?.licensePlate || 'Chua cap nhat'} last />
+        <InfoRow icon={IdCard} label="Vai trò" value={user?.role} />
+        <InfoRow icon={Car} label="Biển số xe" value={user?.licensePlate || 'Chưa cập nhật'} last />
       </div>
 
       <button
         onClick={handleLogout}
         className="w-full bg-white text-rose-500 font-bold text-sm py-4 rounded-xl border border-rose-100 shadow-sm active:scale-[0.98] transition-transform mb-12 flex items-center justify-center gap-2"
       >
-        <LogOut className="w-5 h-5" /> Dang xuat
+        <LogOut className="w-5 h-5" /> Đăng xuất
       </button>
     </div>
   );

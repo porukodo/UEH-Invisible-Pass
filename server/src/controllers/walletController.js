@@ -34,7 +34,7 @@ export async function createTopup(req, res, next) {
   try {
     const { amount } = req.body;
     const amt = Number(amount);
-    if (!amt || amt <= 0) throw new ApiError(400, 'So tien khong hop le');
+    if (!amt || amt <= 0) throw new ApiError(400, 'Số tiền không hợp lệ');
 
     const gatewayRef = `UEHIP${req.user.id}${Date.now()}`;
     await createTopupRequest({ userId: req.user.id, amount: amt, gatewayRef });
@@ -55,7 +55,7 @@ export async function getTopupStatus(req, res, next) {
   try {
     const { gatewayRef } = req.params;
     const topup = await findTopupByGatewayRef(gatewayRef);
-    if (!topup) throw new ApiError(404, 'Khong tim thay yeu cau nap tien');
+    if (!topup) throw new ApiError(404, 'Không tìm thấy yêu cầu nạp tiền');
     if (topup.user_id !== req.user.id) throw new ApiError(403, 'Forbidden');
     res.json({ status: topup.status, retryCount: topup.retry_count });
   } catch (err) {
@@ -101,7 +101,7 @@ export async function handleWebhook(req, res, next) {
       type: 'topup',
       amount: topup.amount,
       gatewayRef,
-      description: 'Nap tien qua VietQR (SePay)',
+      description: 'Nạp tiền qua VietQR (SePay)',
     });
     await markTopupStatus(topup.id, 'confirmed');
 

@@ -35,7 +35,7 @@ export default function GateScannerPage() {
       });
       setResult({ success: true, ...data });
     } catch (err) {
-      setResult({ success: false, message: err.response?.data?.error || 'Loi he thong' });
+      setResult({ success: false, message: err.response?.data?.error || 'Lỗi hệ thống' });
     } finally {
       setTimeout(() => {
         busyRef.current = false;
@@ -80,7 +80,7 @@ export default function GateScannerPage() {
 
       <div className="w-full max-w-sm space-y-4">
         <div>
-          <label className="text-xs font-bold text-slate-400">Chon cong</label>
+          <label className="text-xs font-bold text-slate-400">Chọn cổng</label>
           <select
             value={gateId}
             onChange={(e) => setGateId(e.target.value)}
@@ -89,7 +89,7 @@ export default function GateScannerPage() {
           >
             {gates.map((g) => (
               <option key={g.id} value={g.id}>
-                {g.name} ({g.type === 'entry' ? 'Vao' : 'Ra'})
+                {g.name} ({g.type === 'entry' ? 'Vào' : 'Ra'})
               </option>
             ))}
           </select>
@@ -101,7 +101,7 @@ export default function GateScannerPage() {
           onClick={scanning ? stopScanning : startScanning}
           className="w-full h-12 bg-ueh-green text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2"
         >
-          <ScanLine className="w-5 h-5" /> {scanning ? 'Dung quet' : 'Bat dau quet'}
+          <ScanLine className="w-5 h-5" /> {scanning ? 'Dừng quét' : 'Bắt đầu quét'}
         </button>
 
         {result && (
@@ -114,8 +114,8 @@ export default function GateScannerPage() {
             {result.success ? (
               <>
                 <p className="font-bold">{result.fullName}</p>
-                <p className="text-sm">Phi: {Number(result.fee).toLocaleString('vi-VN')} d</p>
-                <p className="text-xs opacity-70">So du con lai: {Number(result.balance).toLocaleString('vi-VN')} d</p>
+                <p className="text-sm">Phí: {Number(result.fee).toLocaleString('vi-VN')} đ</p>
+                <p className="text-xs opacity-70">Số dư còn lại: {Number(result.balance).toLocaleString('vi-VN')} đ</p>
               </>
             ) : (
               <p className="text-sm font-bold text-center">{result.message}</p>

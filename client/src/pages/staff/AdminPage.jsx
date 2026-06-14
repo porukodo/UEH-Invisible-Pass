@@ -26,9 +26,9 @@ export default function AdminPage() {
         amount: Number(adjustAmount),
         description: adjustDesc,
       });
-      setMessage(`Da dieu chinh. So du moi: ${Number(data.balance).toLocaleString('vi-VN')} d`);
+      setMessage(`Đã điều chỉnh. Số dư mới: ${Number(data.balance).toLocaleString('vi-VN')} đ`);
     } catch (err) {
-      setMessage(err.response?.data?.error || 'Loi dieu chinh');
+      setMessage(err.response?.data?.error || 'Lỗi điều chỉnh');
     }
   }
 
@@ -36,9 +36,9 @@ export default function AdminPage() {
     setMessage('');
     try {
       await api.post('/admin/gate/open', { gateId: Number(gateId) });
-      setMessage('Da gui lenh mo cong');
+      setMessage('Đã gửi lệnh mở cổng');
     } catch (err) {
-      setMessage(err.response?.data?.error || 'Loi mo cong');
+      setMessage(err.response?.data?.error || 'Lỗi mở cổng');
     }
   }
 
@@ -54,32 +54,32 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 space-y-8 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-800">Bang dieu khien Staff/Admin</h1>
+      <h1 className="text-2xl font-bold text-slate-800">Bảng điều khiển Staff/Admin</h1>
 
       <section className="bg-white rounded-2xl shadow-card p-5 space-y-4">
         <h2 className="font-bold text-slate-700 flex items-center gap-2">
-          <Search className="w-4 h-4" /> Tra cuu (FR21)
+          <Search className="w-4 h-4" /> Tra cứu (FR21)
         </h2>
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="MSSV, bien so, ho ten..."
+            placeholder="MSSV, biển số, họ tên..."
             className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
           />
-          <button className="bg-ueh-green text-white px-5 rounded-xl font-bold">Tim</button>
+          <button className="bg-ueh-green text-white px-5 rounded-xl font-bold">Tìm</button>
         </form>
 
         {results && (
           <div className="space-y-4 text-sm">
-            <ResultTable title="Sinh vien" rows={results.users} columns={['mssv', 'full_name', 'email', 'license_plate', 'role']} />
+            <ResultTable title="Sinh viên" rows={results.users} columns={['mssv', 'full_name', 'email', 'license_plate', 'role']} />
             <ResultTable
-              title="Giao dich"
+              title="Giao dịch"
               rows={results.transactions}
               columns={['mssv', 'type', 'amount', 'balance_after', 'gateway_ref', 'created_at']}
             />
             <ResultTable
-              title="Luot quet cong"
+              title="Lượt quét cổng"
               rows={results.parkingLogs}
               columns={['mssv', 'gate_name', 'gate_type', 'fee', 'result', 'scanned_at']}
             />
@@ -89,7 +89,7 @@ export default function AdminPage() {
 
       <section className="bg-white rounded-2xl shadow-card p-5 space-y-4">
         <h2 className="font-bold text-slate-700 flex items-center gap-2">
-          <Wallet className="w-4 h-4" /> Dieu chinh so du thu cong (FR22)
+          <Wallet className="w-4 h-4" /> Điều chỉnh số dư thủ công (FR22)
         </h2>
         <form onSubmit={handleAdjustment} className="grid grid-cols-2 gap-3">
           <input
@@ -102,7 +102,7 @@ export default function AdminPage() {
           <input
             value={adjustAmount}
             onChange={(e) => setAdjustAmount(e.target.value)}
-            placeholder="So tien (+/-)"
+            placeholder="Số tiền (+/-)"
             type="number"
             required
             className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
@@ -110,16 +110,16 @@ export default function AdminPage() {
           <input
             value={adjustDesc}
             onChange={(e) => setAdjustDesc(e.target.value)}
-            placeholder="Mo ta"
+            placeholder="Mô tả"
             className="col-span-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
           />
-          <button className="col-span-2 bg-ueh-orange text-white py-2.5 rounded-xl font-bold">Ap dung</button>
+          <button className="col-span-2 bg-ueh-orange text-white py-2.5 rounded-xl font-bold">Áp dụng</button>
         </form>
       </section>
 
       <section className="bg-white rounded-2xl shadow-card p-5 space-y-4">
         <h2 className="font-bold text-slate-700 flex items-center gap-2">
-          <DoorOpen className="w-4 h-4" /> Mo cong thu cong (FR22)
+          <DoorOpen className="w-4 h-4" /> Mở cổng thủ công (FR22)
         </h2>
         <div className="flex gap-2">
           <input
@@ -129,17 +129,17 @@ export default function AdminPage() {
             className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
           />
           <button onClick={handleManualOpen} className="bg-ueh-green text-white px-5 rounded-xl font-bold">
-            Mo cong
+            Mở cổng
           </button>
         </div>
       </section>
 
       <section className="bg-white rounded-2xl shadow-card p-5 space-y-4">
         <h2 className="font-bold text-slate-700 flex items-center gap-2">
-          <Download className="w-4 h-4" /> Xuat bao cao doi soat (FR23)
+          <Download className="w-4 h-4" /> Xuất báo cáo đối soát (FR23)
         </h2>
         <button onClick={handleExport} className="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold">
-          Xuat Excel
+          Xuất Excel
         </button>
       </section>
 

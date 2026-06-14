@@ -40,30 +40,30 @@ export async function getGateEvents(req, res, next) {
 export async function verifyQr(req, res, next) {
   try {
     const { token, gateId } = req.body;
-    if (!token || !gateId) throw new ApiError(400, 'Thieu token hoac gateId');
+    if (!token || !gateId) throw new ApiError(400, 'Thiếu token hoặc gateId');
 
     const gate = await findGateById(gateId);
-    if (!gate) throw new ApiError(404, 'Khong tim thay cong');
+    if (!gate) throw new ApiError(404, 'Không tìm thấy cổng');
 
     let payload;
     try {
       payload = decryptPayload(token);
     } catch {
-      throw new ApiError(400, 'QR khong hop le');
+      throw new ApiError(400, 'QR không hợp lệ');
     }
 
     const { mssv, totp } = payload;
     const user = await findUserByMssv(mssv);
-    if (!user) throw new ApiError(404, 'Khong tim thay sinh vien');
+    if (!user) throw new ApiError(404, 'Không tìm thấy sinh viên');
 
     if (await isTokenUsed(token)) {
       await insertParkingLog({ userId: user.id, gateId, fee: 0, result: 'duplicate_token' });
-      throw new ApiError(409, 'QR da duoc su dung');
+      throw new ApiError(409, 'QR đã được sử dụng');
     }
 
     if (!verifyTotp(user.totp_secret, totp)) {
       await insertParkingLog({ userId: user.id, gateId, fee: 0, result: 'invalid_token' });
-      throw new ApiError(401, 'QR khong hop le hoac da het han');
+      throw new ApiError(401, 'QR không hợp lệ hoặc đã hết hạn');
     }
 
     await markTokenUsed(token);
@@ -75,7 +75,7 @@ export async function verifyQr(req, res, next) {
         userId: user.id,
         type: 'charge',
         amount: -fee,
-        description: `${gate.type === 'entry' ? 'Vao' : 'Ra'} bai - ${gate.name}`,
+        description: `${gate.type === 'entry' ? 'Vào' : 'Ra'} bãi - ${gate.name}`,
       });
 
       await insertParkingLog({ userId: user.id, gateId, transactionId, fee, result: 'success' });
@@ -92,7 +92,7 @@ export async function verifyQr(req, res, next) {
     } catch (err) {
       if (err.code === 'INSUFFICIENT_BALANCE') {
         await insertParkingLog({ userId: user.id, gateId, fee, result: 'insufficient_balance' });
-        throw new ApiError(402, 'So du khong du. Vui long nap them tien.');
+        throw new ApiError(402, 'Số dư không đủ. Vui lòng nạp thêm tiền.');
       }
       throw err;
     }

@@ -8,8 +8,8 @@ const AMOUNTS = [20000, 50000, 100000, 200000, 500000];
 export default function TopUpPage() {
   const [selectedAmount, setSelectedAmount] = useState(50000);
   const [showQR, setShowQR] = useState(false);
-  const [topup, setTopup] = useState(null); // { gatewayRef, qrUrl, amount }
-  const [status, setStatus] = useState('pending'); // pending | confirmed | failed | expired | offline
+  const [topup, setTopup] = useState(null);
+  const [status, setStatus] = useState('pending');
   const [error, setError] = useState('');
   const pollRef = useRef(null);
 
@@ -21,7 +21,7 @@ export default function TopUpPage() {
       setStatus('pending');
       setShowQR(true);
     } catch (err) {
-      setError(err.response?.data?.error || 'Khong tao duoc yeu cau nap tien');
+      setError(err.response?.data?.error || 'Không tạo được yêu cầu nạp tiền');
     }
   }
 
@@ -36,8 +36,6 @@ export default function TopUpPage() {
           clearInterval(pollRef.current);
         }
       } catch {
-        // NFR08: if the network drops while waiting, surface a clear
-        // "offline" state instead of a generic error.
         setStatus('offline');
       }
     }, 3000);
@@ -54,13 +52,13 @@ export default function TopUpPage() {
   return (
     <div className="flex flex-col h-full bg-white relative">
       <div className="bg-ueh-green w-full py-4 px-4 flex flex-col justify-center text-white">
-        <div className="text-sm opacity-90">Nap tien vao vi qua VietQR</div>
-        <div className="text-[10px] opacity-60 mt-0.5 italic">So du toi thieu khuyen nghi: 20.000 d</div>
+        <div className="text-sm opacity-90">Nạp tiền vào ví qua VietQR</div>
+        <div className="text-[10px] opacity-60 mt-0.5 italic">Số dư tối thiểu khuyến nghị: 20.000 đ</div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-6">
         <div className="space-y-3">
-          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Chon menh gia</h2>
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Chọn mệnh giá</h2>
           <div className="grid grid-cols-2 gap-3">
             {AMOUNTS.map((amount) => (
               <button
@@ -72,7 +70,7 @@ export default function TopUpPage() {
                     : 'bg-white border-slate-100 text-slate-800 hover:border-slate-200'
                 }`}
               >
-                {amount.toLocaleString('vi-VN')} d
+                {amount.toLocaleString('vi-VN')} đ
               </button>
             ))}
           </div>
@@ -80,8 +78,8 @@ export default function TopUpPage() {
 
         <div className="bg-emerald-50/50 rounded-2xl p-4 space-y-3 border border-emerald-100">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-bold text-slate-800">Tong thanh toan</span>
-            <span className="text-lg font-bold text-ueh-dark-green">{selectedAmount.toLocaleString('vi-VN')} d</span>
+            <span className="text-sm font-bold text-slate-800">Tổng thanh toán</span>
+            <span className="text-lg font-bold text-ueh-dark-green">{selectedAmount.toLocaleString('vi-VN')} đ</span>
           </div>
         </div>
 
@@ -93,7 +91,7 @@ export default function TopUpPage() {
           onClick={startTopup}
           className="w-full h-14 bg-ueh-orange text-white rounded-xl font-bold shadow-lg hover:brightness-110 active:scale-[0.98] transition-all"
         >
-          Nap {selectedAmount.toLocaleString('vi-VN')} d qua VietQR
+          Nạp {selectedAmount.toLocaleString('vi-VN')} đ qua VietQR
         </button>
       </div>
 
@@ -113,9 +111,9 @@ export default function TopUpPage() {
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Quet ma de nap tien</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Quét mã để nạp tiền</h2>
             <p className="text-sm text-slate-500 mb-8 text-center max-w-xs">
-              Mo ung dung ngan hang de quet ma. He thong se tu dong cong tien sau vai giay.
+              Mở ứng dụng ngân hàng để quét mã. Hệ thống sẽ tự động cộng tiền sau vài giây.
             </p>
 
             <div className="bg-white p-4 rounded-3xl shadow-2xl border border-slate-100 mb-8 relative">
@@ -124,7 +122,7 @@ export default function TopUpPage() {
 
             <StatusBadge status={status} />
 
-            <p className="text-xs text-slate-400 mt-6 italic">Ma tham chieu: {topup.gatewayRef}</p>
+            <p className="text-xs text-slate-400 mt-6 italic">Mã tham chiếu: {topup.gatewayRef}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -136,27 +134,27 @@ function StatusBadge({ status }) {
   if (status === 'confirmed') {
     return (
       <div className="bg-emerald-50 text-ueh-green px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-sm">
-        <CheckCircle2 className="w-5 h-5" /> Nap tien thanh cong!
+        <CheckCircle2 className="w-5 h-5" /> Nạp tiền thành công!
       </div>
     );
   }
   if (status === 'offline') {
     return (
       <div className="bg-amber-50 text-amber-600 px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-sm">
-        <WifiOff className="w-5 h-5" /> Mat ket noi - dang thu lai...
+        <WifiOff className="w-5 h-5" /> Mất kết nối - đang thử lại...
       </div>
     );
   }
   if (status === 'expired' || status === 'failed') {
     return (
       <div className="bg-rose-50 text-rose-500 px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-sm">
-        Khong xac nhan duoc giao dich. Vui long lien he quay ho tro.
+        Không xác nhận được giao dịch. Vui lòng liên hệ quầy hỗ trợ.
       </div>
     );
   }
   return (
     <div className="bg-emerald-50 text-ueh-green px-6 py-3 rounded-full font-bold flex items-center gap-2 animate-pulse shadow-sm">
-      <CheckCircle2 className="w-5 h-5" /> Dang cho thanh toan...
+      <CheckCircle2 className="w-5 h-5" /> Đang chờ thanh toán...
     </div>
   );
 }
