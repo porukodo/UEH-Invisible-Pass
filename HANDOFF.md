@@ -52,35 +52,52 @@ All of the above was verified locally (server boots, replay rejection
 returns 409, gate-events polling reflects a real gate-open, cron endpoint
 auth works, client builds cleanly) — see git history for details.
 
-## What's left to do
+### Latest session: post-deployment fixes & hardening
 
-1. **Provision a production database** — TiDB Cloud Serverless via the
-   Vercel Marketplace (Storage tab), then run `database/schema.sql` and
-   `database/data.sql` (or just the new-table snippet if reusing an
-   existing DB). Details in the README.
-2. **Create two Vercel projects**:
-   - `server/` (root directory `server`) — set all env vars from
-     `server/.env.example` (DB creds + `DB_SSL=true`, `JWT_SECRET`,
-     `CLIENT_ORIGIN`, SMTP, VietQR, `GATE_HMAC_SECRET`, `QR_AES_KEY`,
-     `SEPAY_API_KEY`, `CRON_SECRET`).
-   - `client/` (root directory `client`) — set `VITE_API_URL` (server
-     project URL), `VITE_QR_AES_KEY`, `VITE_GATE_HMAC_SECRET` (must match
-     server).
-3. **Deploy both** (`vercel` then `vercel --prod` in each directory), then
-   set `CLIENT_ORIGIN` (server) and `VITE_API_URL` (client) to each other's
-   real URLs and redeploy if needed.
-4. **Point the SePay webhook** at
-   `https://<server-project>.vercel.app/api/wallet/webhook` (ngrok no
-   longer needed).
-5. Double-check Vercel Cron is registered for `/api/cron/topup-retry` — on
-   the Hobby plan this only runs ~once/day, which is fine since it's just a
-   fallback for top-ups that never got a webhook.
+**Bugs fixed:**
+1. **Fee timezone** — was reading UTC hour (7h off Vietnam); now computes UTC+7.
+2. **Anti-replay race** — check-then-insert allowed concurrent double-charges; now atomic.
+3. **iOS "Invalid Date"** — UTC timestamps weren't parsing on Safari; now safe across browsers.
+4. **Seed script** — was silently no-op with empty `DEMO_USERS`; now logs.
 
-## Re-verification checklist
+**UX improvements:**
+- Staff/admin pages now have a `StaffNav` bar linking between Admin/Scanner/Barrier and logout.
+- After OTP login, staff/admin redirect to `/admin` (students still go to the wallet).
 
-Worth re-testing end-to-end after the refactor above (especially items
-marked **[changed]**), ideally once locally and again after the Vercel
-deploy:
+**Security hardening:**
+- `POST /api/gate/verify` now requires staff/admin JWT + role in addition to HMAC signature (defense in depth — leaked client secret alone can't reach the endpoint).
+
+## Production deployment — DONE ✅
+
+**Live URLs:**
+- **Client**: https://client-zeta-seven-74.vercel.app
+- **Server**: https://server-beta-lyart-59.vercel.app
+- **Database**: TiDB Cloud Serverless (`ueh_invisible_pass`)
+
+**Deployed with:**
+- TiDB provisioned, schema + gates seeded, admin account created (`phatbui.31231023065@st.ueh.edu.vn`)
+- All env vars configured (DB, JWT, SMTP, VietQR, HMAC, AES, etc.)
+- Vercel Cron registered for `/api/cron/topup-retry`
+- Recent fixes: staff nav, gate-endpoint JWT+role auth hardening, UTC session timezone pinning
+
+## What's still left to do
+
+1. **SePay webhook** — Requires access to the SePay merchant dashboard (Quang has credentials). Configure:
+   - URL: `https://server-beta-lyart-59.vercel.app/api/wallet/webhook`
+   - Header: `Authorization: Apikey 51231f13f422c5f8d1cfcd5925f9de9c`
+   - ⚠️ VietQR account is Quang's (VietinBank `100872880702`, HUYNH NHAT QUANG) — transfers land in his account; swap `VIETQR_ACCOUNT_NO/NAME` if you want your own.
+   - Until configured: top-ups show a QR but don't auto-credit; use admin manual wallet adjustment for demos.
+
+2. **Real user accounts** — Demo seeded accounts are removed; register new ones in-app or add to `server/src/seed.js` for batch creation.
+   - **Students**: register via `/register`.
+   - **Staff/admin**: can't self-register (role forced to `student`); tell me details and I'll add them via seed or direct DB insert.
+   - **Your admin password**: change from `123456` (it's on a public URL; OTP 2FA helps).
+
+3. **Optional**: Document in your report the design constraint that `VITE_QR_AES_KEY` must be in the browser (NFR02 offline QR generation requires client-side encryption). We hardened the gate endpoint to require auth+role on top of the HMAC, so a leaked key alone can't hit the endpoint, but the key itself can't be removed.
+
+## Live verification checklist
+
+Core features are deployed. Worth testing these flows against the live production URLs (staff/admin nav is new; gate-endpoint auth is hardened; UTC timestamps now display Vietnam local time):
 
 **Auth** (`/register`, `/verify-email`, `/login`, `/verify-login-otp`)
 - [ ] Register with a `@st.ueh.edu.vn` email → OTP (console or email) →
@@ -96,25 +113,28 @@ deploy:
 - [ ] QR page shows a QR that visibly changes every ~30s.
 - [ ] Profile shows correct user info; logout works.
 
-**Gate verification** (`/gate-scanner`) — **[changed: DB-backed anti-replay]**
+**Gate verification** (`/gate-scanner`) — **[changed: DB-backed atomic anti-replay + auth hardening]**
 - [ ] Scanning a valid QR debits the wallet by the calculated fee and shows
-      success.
-- [ ] Scanning the **same** QR token again is rejected ("QR da duoc su
-      dung") — confirms `used_qr_tokens` works.
+      success (with correct fee for the time of day, i.e., day rate before 18:00 VN).
+- [ ] Scanning the **same** QR token again is rejected ("QR đã được sử dụng") — confirms atomic `INSERT IGNORE` works.
 - [ ] Scanning with insufficient balance returns the friendly error (no
       debit).
-- [ ] Expired/invalid TOTP rejected.
+- [ ] Expired/invalid TOTP rejected (and *not* consumed, so the next 30s code works).
+- [ ] **[New]** Unauthenticated requests to `/api/gate/verify` return 401 (requires staff/admin JWT).
 
 **Barrier simulator** (`/barrier`) — **[changed: polling instead of Socket.io]**
 - [ ] After a successful gate scan (or admin manual-open), the barrier
       opens within ~2s and auto-closes after 10s.
 - [ ] Switching the gate dropdown polls the newly selected gate.
 
-**Admin/staff** (`/admin`)
+**Admin/staff** (`/admin`, `/gate-scanner`, `/barrier`)
+- [ ] After login, staff/admin land on `/admin` (not the student wallet).
+- [ ] StaffNav bar is present; can navigate between Admin/Scanner/Barrier pages and logout.
 - [ ] Search users/transactions/parking logs by MSSV, plate, or date range.
 - [ ] Manual wallet adjustment changes balance and appears in transactions.
 - [ ] Manual gate open triggers the barrier simulator (via `gate_events`).
 - [ ] Excel export downloads a valid `.xlsx` with the expected rows.
+- [ ] Wallet/transaction dates display in Vietnam local time (04:38 UTC+7, not 21:38 UTC).
 
 **Cron / retry** — **[new]**
 - [ ] `GET /api/cron/topup-retry` without/with wrong `Authorization`
