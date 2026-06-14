@@ -1,5 +1,5 @@
 import { decryptPayload, verifyTotp } from '../utils/crypto.js';
-import { isTokenUsed, markTokenUsed } from '../models/tokenModel.js';
+import { claimToken } from '../models/tokenModel.js';
 import { calculateFee } from '../utils/feeCalculator.js';
 import { findUserByMssv } from '../models/userModel.js';
 import { applyLedgerEntry } from '../models/walletModel.js';
@@ -56,17 +56,19 @@ export async function verifyQr(req, res, next) {
     const user = await findUserByMssv(mssv);
     if (!user) throw new ApiError(404, 'Không tìm thấy sinh viên');
 
-    if (await isTokenUsed(token)) {
-      await insertParkingLog({ userId: user.id, gateId, fee: 0, result: 'duplicate_token' });
-      throw new ApiError(409, 'QR đã được sử dụng');
-    }
-
+    // Verify the TOTP before claiming the token so an invalid/expired QR is
+    // not consumed (the student can simply present the next 30s code).
     if (!verifyTotp(user.totp_secret, totp)) {
       await insertParkingLog({ userId: user.id, gateId, fee: 0, result: 'invalid_token' });
       throw new ApiError(401, 'QR không hợp lệ hoặc đã hết hạn');
     }
 
-    await markTokenUsed(token);
+    // Atomically claim the token (FR13). Whoever loses a concurrent scan - or
+    // any later replay - gets false here and is rejected before any debit.
+    if (!(await claimToken(token))) {
+      await insertParkingLog({ userId: user.id, gateId, fee: 0, result: 'duplicate_token' });
+      throw new ApiError(409, 'QR đã được sử dụng');
+    }
 
     const fee = calculateFee();
 
