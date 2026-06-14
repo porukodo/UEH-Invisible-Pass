@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../../api/client';
+import StaffNav from '../../components/StaffNav';
 
 const AUTO_CLOSE_MS = 10_000; // FR20: simplified auto-close after 10s
 const POLL_INTERVAL_MS = 2_000;
@@ -43,7 +44,9 @@ export default function BarrierSimulatorPage() {
   }, [gateId]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center gap-8 p-6">
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+      <StaffNav />
+      <div className="flex-1 flex flex-col items-center justify-center gap-8 p-6">
       <h1 className="text-xl font-bold">Barrier Simulator</h1>
 
       <select
@@ -89,6 +92,7 @@ export default function BarrierSimulatorPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

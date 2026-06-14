@@ -3,6 +3,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { CheckCircle2, XCircle, ScanLine } from 'lucide-react';
 import { api } from '../../api/client';
 import { signGatePayload } from '../../utils/crypto';
+import StaffNav from '../../components/StaffNav';
 
 const SCANNER_ID = 'gate-qr-reader';
 
@@ -75,7 +76,9 @@ export default function GateScannerPage() {
   useEffect(() => () => stopScanning(), []);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center p-6 gap-6">
+    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+      <StaffNav />
+      <div className="flex-1 flex flex-col items-center p-6 gap-6">
       <h1 className="text-xl font-bold">Gate Scanner - UEH Invisible Pass</h1>
 
       <div className="w-full max-w-sm space-y-4">
@@ -122,6 +125,7 @@ export default function GateScannerPage() {
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   );
