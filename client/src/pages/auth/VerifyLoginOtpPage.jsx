@@ -19,8 +19,9 @@ export default function VerifyLoginOtpPage() {
     setError('');
     setLoading(true);
     try {
-      await verifyLoginOtp(email, code);
-      navigate('/');
+      const loggedInUser = await verifyLoginOtp(email, code);
+      // Staff/admin land on their dashboard; students on the wallet.
+      navigate(loggedInUser.role === 'student' ? '/' : '/admin');
     } catch (err) {
       setError(err.response?.data?.error || 'Xác thực không thành công');
     } finally {

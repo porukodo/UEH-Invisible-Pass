@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Search, Download, Wallet, DoorOpen } from 'lucide-react';
 import { api } from '../../api/client';
+import StaffNav from '../../components/StaffNav';
+import { formatDbDateTime } from '../../utils/datetime';
 
 export default function AdminPage() {
   const [query, setQuery] = useState('');
@@ -53,7 +55,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6 space-y-8 max-w-3xl mx-auto">
+    <div className="min-h-screen bg-slate-100">
+      <StaffNav />
+      <div className="p-6 space-y-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-slate-800">Bảng điều khiển Staff/Admin</h1>
 
       <section className="bg-white rounded-2xl shadow-card p-5 space-y-4">
@@ -144,6 +148,7 @@ export default function AdminPage() {
       </section>
 
       {message && <p className="text-sm font-bold text-ueh-green">{message}</p>}
+      </div>
     </div>
   );
 }
@@ -169,7 +174,7 @@ function ResultTable({ title, rows, columns }) {
               <tr key={i} className="border-t border-slate-50">
                 {columns.map((c) => (
                   <td key={c} className="px-2 py-1.5">
-                    {String(row[c] ?? '')}
+                    {c.endsWith('_at') ? formatDbDateTime(row[c]) : String(row[c] ?? '')}
                   </td>
                 ))}
               </tr>
