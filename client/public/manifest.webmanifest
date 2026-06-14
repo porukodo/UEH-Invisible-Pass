@@ -1,0 +1,18 @@
+{
+  "name": "UEH Invisible Pass",
+  "short_name": "Invisible Pass",
+  "description": "Vi dien tu va the QR dong cho he thong gui xe khong tien mat UEH",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5F7F4",
+  "theme_color": "#007A55",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
