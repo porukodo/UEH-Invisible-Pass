@@ -28,6 +28,14 @@ export async function markEmailVerified(userId) {
   await pool.query('UPDATE users SET email_verified_at = NOW() WHERE id = ?', [userId]);
 }
 
+export async function updateUnverifiedUser(id, { mssv, fullName, email, passwordHash, licensePlate }) {
+  await pool.query(
+    `UPDATE users SET mssv = ?, full_name = ?, email = ?, password_hash = ?, license_plate = ?
+     WHERE id = ? AND email_verified_at IS NULL`,
+    [mssv, fullName, email, passwordHash, licensePlate || null, id]
+  );
+}
+
 export async function searchUsers({ q }) {
   const [rows] = await pool.query(
     `SELECT id, mssv, full_name, email, role, license_plate, status

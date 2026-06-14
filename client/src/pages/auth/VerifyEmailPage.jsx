@@ -7,7 +7,7 @@ export default function VerifyEmailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email || '';
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(location.state?.devOtp || '');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ export default function VerifyEmailPage() {
       await api.post('/auth/verify-email', { email, code });
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.error || 'Xac thuc khong thanh cong');
+      setError(err.response?.data?.error || 'Xác thực không thành công');
     } finally {
       setLoading(false);
     }
@@ -30,18 +30,19 @@ export default function VerifyEmailPage() {
     setError('');
     setMessage('');
     try {
-      await api.post('/auth/resend-otp', { email, purpose: 'email_verify' });
-      setMessage('Da gui lai ma OTP');
+      const { data } = await api.post('/auth/resend-otp', { email, purpose: 'email_verify' });
+      setMessage('Đã gửi lại mã OTP');
+      if (data.devOtp) setCode(data.devOtp);
     } catch (err) {
-      setError(err.response?.data?.error || 'Khong gui duoc OTP');
+      setError(err.response?.data?.error || 'Không gửi được OTP');
     }
   }
 
   return (
-    <AuthLayout title="Xac thuc email" subtitle={`Ma OTP da duoc gui den ${email}`}>
+    <AuthLayout title="Xác thực email" subtitle={`Mã OTP đã được gửi đến ${email}`}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-xs font-bold text-slate-500">Ma OTP (6 so)</label>
+          <label className="text-xs font-bold text-slate-500">Mã OTP (6 số)</label>
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}
@@ -57,15 +58,15 @@ export default function VerifyEmailPage() {
           disabled={loading}
           className="w-full h-12 bg-ueh-green text-white rounded-xl font-bold shadow-lg active:scale-[0.98] transition-all disabled:opacity-60"
         >
-          {loading ? 'Dang xu ly...' : 'Xac thuc'}
+          {loading ? 'Đang xử lý...' : 'Xác thực'}
         </button>
         <button type="button" onClick={handleResend} className="w-full text-xs text-ueh-orange font-bold">
-          Gui lai ma
+          Gửi lại mã
         </button>
       </form>
       <p className="text-center text-xs text-slate-400">
         <Link to="/login" className="text-ueh-orange font-bold">
-          Quay lai dang nhap
+          Quay lại đăng nhập
         </Link>
       </p>
     </AuthLayout>

@@ -37,7 +37,7 @@ export async function runRetryPass() {
         type: 'topup',
         amount: topup.amount,
         gatewayRef: topup.gateway_ref,
-        description: 'Nap tien qua VietQR (xac nhan qua retry job)',
+        description: 'Nạp tiền qua VietQR (xác nhận qua retry job)',
       });
       await markTopupStatus(topup.id, 'confirmed');
       console.log(`[topup-retry] confirmed ${topup.gateway_ref}`);

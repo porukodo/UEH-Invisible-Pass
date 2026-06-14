@@ -5,9 +5,9 @@ import BottomNav from './BottomNav';
 
 const TITLES = {
   '/': 'Invisible Pass',
-  '/topup': 'Nap tien',
-  '/qr': 'The xe ky thuat so',
-  '/profile': 'Tai khoan',
+  '/topup': 'Nạp tiền',
+  '/qr': 'Thẻ xe kỹ thuật số',
+  '/profile': 'Tài khoản',
 };
 
 export default function MobileFrame() {

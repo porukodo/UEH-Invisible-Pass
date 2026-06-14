@@ -53,7 +53,7 @@ export default function BarrierSimulatorPage() {
       >
         {gates.map((g) => (
           <option key={g.id} value={g.id}>
-            {g.name} ({g.type === 'entry' ? 'Vao' : 'Ra'})
+            {g.name} ({g.type === 'entry' ? 'Vào' : 'Ra'})
           </option>
         ))}
       </select>
@@ -80,11 +80,11 @@ export default function BarrierSimulatorPage() {
       {lastEvent && (
         <div className="text-xs text-slate-400 text-center">
           {lastEvent.manual ? (
-            <p>Mo thu cong boi {lastEvent.openedBy}</p>
+            <p>Mở thủ công bởi {lastEvent.openedBy}</p>
           ) : (
             <p>
-              {lastEvent.fullName} - Phi {Number(lastEvent.fee).toLocaleString('vi-VN')} d - So du con{' '}
-              {Number(lastEvent.balance).toLocaleString('vi-VN')} d
+              {lastEvent.fullName} - Phí {Number(lastEvent.fee).toLocaleString('vi-VN')} đ - Số dư còn{' '}
+              {Number(lastEvent.balance).toLocaleString('vi-VN')} đ
             </p>
           )}
         </div>

@@ -22,13 +22,13 @@ export function generateOtpCode() {
 export async function sendOtpEmail(to, code, purpose) {
   const subject =
     purpose === 'email_verify'
-      ? 'UEH Invisible Pass - Xac thuc email'
-      : 'UEH Invisible Pass - Ma xac thuc dang nhap';
+      ? 'UEH Invisible Pass - Xác thực email'
+      : 'UEH Invisible Pass - Mã xác thực đăng nhập';
 
   const html = `
-    <p>Ma OTP cua ban la:</p>
+    <p>Mã OTP của bạn là:</p>
     <h2 style="letter-spacing:4px">${code}</h2>
-    <p>Ma co hieu luc trong 5 phut. Vui long khong chia se ma nay voi bat ky ai.</p>
+    <p>Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
   `;
 
   if (!env.smtp.user) {

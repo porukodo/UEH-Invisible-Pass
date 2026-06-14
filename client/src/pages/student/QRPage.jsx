@@ -43,11 +43,11 @@ export default function QRPage() {
           <h2 className="text-sm font-bold text-slate-800">{user?.fullName}</h2>
           <p className="text-[10px] text-slate-500 font-medium tracking-tight">MSSV: {user?.mssv}</p>
           {user?.licensePlate && (
-            <p className="text-[10px] text-slate-500 font-medium tracking-tight">Bien so: {user.licensePlate}</p>
+            <p className="text-[10px] text-slate-500 font-medium tracking-tight">Biển số: {user.licensePlate}</p>
           )}
         </div>
         <div className="bg-emerald-50 text-ueh-green text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
-          Da xac thuc <CheckCircle2 className="w-3.5 h-3.5" />
+          Đã xác thực <CheckCircle2 className="w-3.5 h-3.5" />
         </div>
       </motion.div>
 
@@ -57,7 +57,7 @@ export default function QRPage() {
         className="bg-white rounded-3xl p-6 shadow-card flex flex-col items-center gap-6 border border-slate-50"
       >
         <div className="bg-ueh-orange text-white text-[10px] font-bold px-4 py-2 rounded-full flex items-center gap-2">
-          <RefreshCw className="w-3.5 h-3.5" /> TOTP DONG - Tu dong doi moi {TOTP_STEP}s
+          <RefreshCw className="w-3.5 h-3.5" /> TOTP ĐỘNG - Tự động đổi mới {TOTP_STEP}s
         </div>
 
         <div className="w-full aspect-square max-w-[240px] rounded-2xl border-2 border-ueh-green p-3 bg-white shadow-inner flex items-center justify-center overflow-hidden">
@@ -81,12 +81,12 @@ export default function QRPage() {
             </svg>
             <span className="absolute text-sm font-bold text-ueh-green">{timeLeft}s</span>
           </div>
-          <p className="text-[10px] text-slate-400 italic">Ma moi sau {timeLeft} giay - Khong chup man hinh</p>
+          <p className="text-[10px] text-slate-400 italic">Mã mới sau {timeLeft} giây - Không chụp màn hình</p>
         </div>
       </motion.div>
 
       <div className="flex flex-wrap justify-center gap-2">
-        {['Ma hoa AES-256', 'Offline hoat dong', 'Chong gian lan'].map((tag) => (
+        {['Mã hoá AES-256', 'Offline hoạt động', 'Chống gian lận'].map((tag) => (
           <span
             key={tag}
             className="bg-emerald-50 text-ueh-green text-[10px] font-bold px-4 py-2 rounded-full border border-emerald-100/50 shadow-sm"
@@ -98,13 +98,13 @@ export default function QRPage() {
 
       <div className="bg-white rounded-2xl p-5 shadow-card border border-slate-50 space-y-4">
         <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-          <Info className="w-4 h-4 text-ueh-green" /> Cach dung
+          <Info className="w-4 h-4 text-ueh-green" /> Cách dùng
         </h3>
         <div className="space-y-4">
           {[
-            { step: 1, text: 'Mo man hinh nay' },
-            { step: 2, text: 'Dua dien thoai vao may quet' },
-            { step: 3, text: 'Cong tu mo' },
+            { step: 1, text: 'Mở màn hình này' },
+            { step: 2, text: 'Đưa điện thoại vào máy quét' },
+            { step: 3, text: 'Cổng tự mở' },
           ].map((item) => (
             <div key={item.step} className="flex items-center gap-4">
               <div className="w-7 h-7 rounded-full bg-slate-50 text-slate-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
