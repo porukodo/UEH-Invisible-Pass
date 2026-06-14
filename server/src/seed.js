@@ -6,34 +6,19 @@ import { createWallet, applyLedgerEntry } from './models/walletModel.js';
 
 const DEMO_PASSWORD = '123456';
 
-const DEMO_USERS = [
-  {
-    mssv: '31221012345',
-    fullName: 'Nguyen Van Sinh Vien',
-    email: 'svdemo@st.ueh.edu.vn',
-    role: 'student',
-    licensePlate: '59-X1 123.45',
-    topupBalance: 100000,
-  },
-  {
-    mssv: 'STAFF001',
-    fullName: 'Tran Thi Nhan Vien',
-    email: 'staffdemo@st.ueh.edu.vn',
-    role: 'staff',
-    licensePlate: null,
-    topupBalance: 0,
-  },
-  {
-    mssv: 'ADMIN001',
-    fullName: 'Le Van Quan Tri',
-    email: 'admindemo@st.ueh.edu.vn',
-    role: 'admin',
-    licensePlate: null,
-    topupBalance: 0,
-  },
-];
+// No accounts are seeded by default - register real accounts through the app.
+// To create accounts programmatically, add entries here (each is created with
+// email already verified and the password above) and run `npm run seed`:
+//   { mssv, fullName, email, role: 'student'|'staff'|'admin', licensePlate, topupBalance }
+const DEMO_USERS = [];
 
 async function seed() {
+  if (DEMO_USERS.length === 0) {
+    console.log('No accounts to seed (DEMO_USERS is empty). Add entries to src/seed.js to create accounts.');
+    await pool.end();
+    return;
+  }
+
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
   for (const demo of DEMO_USERS) {

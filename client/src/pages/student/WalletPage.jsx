@@ -4,6 +4,7 @@ import { Plus, Car, History as HistoryIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { formatDbDateTime } from '../../utils/datetime';
 
 export default function WalletPage() {
   const { user } = useAuth();
@@ -93,7 +94,7 @@ export default function WalletPage() {
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-800">{tx.description || tx.type}</span>
                   <span className="text-[10px] text-slate-400">
-                    {new Date(tx.created_at).toLocaleString('vi-VN')}
+                    {formatDbDateTime(tx.created_at)}
                   </span>
                 </div>
               </div>

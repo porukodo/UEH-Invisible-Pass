@@ -18,10 +18,18 @@ export async function isTokenUsed(token) {
   return rows.length > 0;
 }
 
-export async function markTokenUsed(token) {
+/**
+ * Atomically claim a QR token for redemption (FR13 anti-replay). Relies on the
+ * PRIMARY KEY on token_hash: `INSERT IGNORE` inserts exactly once, so the call
+ * that gets affectedRows === 1 is the sole winner even under concurrent scans.
+ * Returns false if the token was already claimed (replay), guarding against a
+ * double-charge race that a separate check-then-insert would allow.
+ */
+export async function claimToken(token) {
   const expiresAt = new Date(Date.now() + TTL_MS);
-  await pool.query(
+  const [result] = await pool.query(
     'INSERT IGNORE INTO used_qr_tokens (token_hash, expires_at) VALUES (?, ?)',
     [hashToken(token), expiresAt]
   );
+  return result.affectedRows === 1;
 }

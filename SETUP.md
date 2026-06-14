@@ -26,7 +26,7 @@ mysql -u root ueh_invisible_pass < database/data.sql
 ```
 
 - `schema.sql` creates the `ueh_invisible_pass` database and all tables.
-- `data.sql` populates 4 demo gates and 3 demo accounts (see below).
+- `data.sql` populates the 4 demo gates (no user accounts — see step 5).
 
 (If your MySQL root user has a password, add `-p` and enter it when
 prompted.)
@@ -73,23 +73,18 @@ npm run dev
 Open `http://localhost:5173`. The Vite dev server proxies `/api` requests
 to `http://localhost:4000`, so `VITE_API_URL` can stay empty.
 
-## 5. Demo accounts
+## 5. Accounts
 
-All seeded by `database/data.sql` (password for all: `123456`):
+No accounts are seeded — `database/data.sql` only populates the 4 demo
+gates. Create accounts by **registering through the app** (`/register` with a
+`@st.ueh.edu.vn` email → OTP verification). Login requires an OTP step —
+check the **server console** for the printed code if SMTP isn't configured.
 
-| Role | Login email | MSSV |
-| --- | --- | --- |
-| Student | `svdemo@st.ueh.edu.vn` | `31221012345` (wallet starts at 100,000đ) |
-| Staff | `staffdemo@st.ueh.edu.vn` | `STAFF001` |
-| Admin | `admindemo@st.ueh.edu.vn` | `ADMIN001` |
-
-Login requires an OTP step — check the **server console** for the printed
-code if SMTP isn't configured.
-
-Alternatively, `npm run seed` (from `server/`) creates the same 3 accounts
-programmatically (with freshly generated TOTP secrets) and is idempotent —
-useful if you ever wipe the `users`/`wallets` tables without re-running
-`data.sql`.
+To create accounts programmatically instead (e.g. staff/admin roles, which
+can't be self-registered), add entries to the `DEMO_USERS` array in
+`server/src/seed.js` and run `npm run seed` from `server/`. The seed script
+is idempotent (skips emails that already exist) and creates each account with
+its email already verified.
 
 ## 6. Where to find things in the app
 
