@@ -37,7 +37,7 @@ mysql -u root -p < database/schema.sql
 cd server
 cp .env.example .env   # fill in DB/SMTP/VietQR/etc. credentials
 npm install
-npm run seed            # creates demo student/staff/admin accounts (password: 123456)
+npm run seed            # optional: seeds accounts listed in src/seed.js (empty by default)
 npm run dev              # http://localhost:4000
 ```
 

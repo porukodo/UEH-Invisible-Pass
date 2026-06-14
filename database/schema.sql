@@ -178,6 +178,6 @@ CREATE TABLE gate_events (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------
--- Seed/demo data lives in data.sql (gates, demo accounts, wallets).
+-- Seed data lives in data.sql (gates only; accounts are registered in-app).
 -- After this file, run:  mysql -u root ueh_invisible_pass < data.sql
 -- ---------------------------------------------------------------

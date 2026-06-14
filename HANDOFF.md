@@ -89,7 +89,8 @@ deploy:
 - [ ] Non-`@st.ueh.edu.vn` email rejected at registration.
 
 **Student wallet** (`/`, `/topup`, `/qr`, `/profile`)
-- [ ] Wallet shows correct balance (demo student starts at 100,000đ).
+- [ ] Wallet shows correct balance (a freshly registered account starts at 0đ;
+      top up or use admin manual adjustment to add balance).
 - [ ] Top-up creates a VietQR code; after a real SePay transfer (or
       simulated webhook call), balance updates and pending state clears.
 - [ ] QR page shows a QR that visibly changes every ~30s.
