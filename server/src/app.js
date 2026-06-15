@@ -16,6 +16,7 @@ export function createApp() {
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
   app.use(express.json());
 
+  app.get('/', (req, res) => res.json({ status: 'ok', service: 'UEH Invisible Pass API' }));
   app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
   app.use('/api/auth', authRoutes);
