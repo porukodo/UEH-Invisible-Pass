@@ -6,7 +6,16 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const raw = localStorage.getItem('uip_user');
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // Stale/corrupted value from an older app version - drop it rather
+      // than letting JSON.parse throw and crash the whole React tree.
+      localStorage.removeItem('uip_user');
+      localStorage.removeItem('uip_token');
+      return null;
+    }
   });
 
   useEffect(() => {
