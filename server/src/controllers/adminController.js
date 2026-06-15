@@ -14,8 +14,8 @@ export async function search(req, res, next) {
 
     const [users, transactions, parkingLogs] = await Promise.all([
       q ? searchUsers({ q }) : [],
-      searchTransactions({ mssv: q, from, to }),
-      searchParkingLogs({ mssv: q, from, to }),
+      searchTransactions({ q, from, to }),
+      searchParkingLogs({ q, from, to }),
     ]);
 
     res.json({ users, transactions, parkingLogs });

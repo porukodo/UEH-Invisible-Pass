@@ -150,6 +150,7 @@ export async function verifyLoginOtp(req, res, next) {
     const { email, code } = req.body;
     const user = await findUserByEmail(email);
     if (!user) throw new ApiError(404, 'Không tìm thấy tài khoản');
+    if (user.status !== 'active') throw new ApiError(403, 'Tài khoản đã bị khóa');
 
     const otp = await findActiveOtp(user.id, 'login');
     if (!otp) throw new ApiError(400, 'Mã OTP đã hết hạn, vui lòng đăng nhập lại');

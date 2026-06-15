@@ -1,11 +1,24 @@
+import crypto from 'crypto';
 import { pool } from '../config/db.js';
 
-export async function createTopupRequest({ userId, amount, gatewayRef }) {
+/**
+ * Inserts the row first to get its id, then derives a short `UEHIP<id>`
+ * gateway_ref from it - VietQR's transfer-content field is size-limited
+ * (and SePay's VietinBank link requires it to start with "SEVQR "), so the
+ * old `UEHIP<userId><timestamp>` ref was too long to fit alongside that.
+ */
+export async function createTopupRequest({ userId, amount }) {
+  // gateway_ref is UNIQUE, and this placeholder is briefly written before
+  // being replaced below - add randomness so two requests from the same
+  // user in the same millisecond (e.g. a double-tap) can't collide on it.
+  const placeholder = `PENDING${userId}${Date.now()}${crypto.randomBytes(4).toString('hex')}`;
   const [result] = await pool.query(
     `INSERT INTO topup_requests (user_id, amount, gateway_ref, status) VALUES (?, ?, ?, 'pending')`,
-    [userId, amount, gatewayRef]
+    [userId, amount, placeholder]
   );
-  return result.insertId;
+  const gatewayRef = `UEHIP${result.insertId}`;
+  await pool.query('UPDATE topup_requests SET gateway_ref = ? WHERE id = ?', [gatewayRef, result.insertId]);
+  return gatewayRef;
 }
 
 export async function findTopupByGatewayRef(gatewayRef) {

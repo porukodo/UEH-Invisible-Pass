@@ -122,7 +122,12 @@ export default function TopUpPage() {
 
             <StatusBadge status={status} />
 
-            <p className="text-xs text-slate-400 mt-6 italic">Mã tham chiếu: {topup.gatewayRef}</p>
+            <p className="text-xs text-slate-500 mt-6 text-center">
+              Nội dung chuyển khoản: <span className="font-bold text-slate-700">{topup.content}</span>
+            </p>
+            <p className="text-[10px] text-slate-400 mt-1 italic">
+              Vui lòng giữ nguyên nội dung này khi chuyển khoản
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

@@ -36,15 +36,18 @@ export async function createTopup(req, res, next) {
     const amt = Number(amount);
     if (!amt || amt <= 0) throw new ApiError(400, 'Số tiền không hợp lệ');
 
-    const gatewayRef = `UEHIP${req.user.id}${Date.now()}`;
-    await createTopupRequest({ userId: req.user.id, amount: amt, gatewayRef });
+    const gatewayRef = await createTopupRequest({ userId: req.user.id, amount: amt });
 
     const { bankId, accountNo, accountName } = env.vietqr;
-    const addInfo = encodeURIComponent(gatewayRef);
+    // SePay's VietinBank link only forwards a balance-change notification
+    // when the transfer content starts with "SEVQR" - without it the IPN
+    // never fires, no matter how the webhook itself is configured.
+    const content = `SEVQR ${gatewayRef}`;
+    const addInfo = encodeURIComponent(content);
     const accName = encodeURIComponent(accountName);
     const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${amt}&addInfo=${addInfo}&accountName=${accName}`;
 
-    res.status(201).json({ gatewayRef, qrUrl, amount: amt });
+    res.status(201).json({ gatewayRef, qrUrl, amount: amt, content });
   } catch (err) {
     next(err);
   }

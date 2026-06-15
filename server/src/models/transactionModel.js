@@ -14,13 +14,13 @@ export async function findTransactionByGatewayRef(gatewayRef) {
   return rows[0] || null;
 }
 
-export async function searchTransactions({ mssv, from, to }) {
+export async function searchTransactions({ q, from, to }) {
   const conditions = [];
   const params = [];
 
-  if (mssv) {
-    conditions.push('u.mssv LIKE ?');
-    params.push(`%${mssv}%`);
+  if (q) {
+    conditions.push('(u.mssv LIKE ? OR u.full_name LIKE ? OR u.license_plate LIKE ?)');
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
   if (from) {
     conditions.push('t.created_at >= ?');

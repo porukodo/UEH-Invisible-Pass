@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { api } from '../api/client';
+import { api, setUnauthorizedHandler } from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +22,14 @@ export function AuthProvider({ children }) {
     if (user) localStorage.setItem('uip_user', JSON.stringify(user));
     else localStorage.removeItem('uip_user');
   }, [user]);
+
+  // If any request comes back 401 (expired/missing token), drop the stale
+  // user so ProtectedRoute sends them back to /login instead of leaving
+  // them stuck on a page that can no longer call the API.
+  useEffect(() => {
+    setUnauthorizedHandler(() => setUser(null));
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   async function login(email, password) {
     const { data } = await api.post('/auth/login', { email, password });

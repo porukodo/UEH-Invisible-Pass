@@ -9,13 +9,13 @@ export async function insertParkingLog({ userId, gateId, transactionId, fee, res
   return res.insertId;
 }
 
-export async function searchParkingLogs({ mssv, from, to }) {
+export async function searchParkingLogs({ q, from, to }) {
   const conditions = [];
   const params = [];
 
-  if (mssv) {
-    conditions.push('u.mssv LIKE ?');
-    params.push(`%${mssv}%`);
+  if (q) {
+    conditions.push('(u.mssv LIKE ? OR u.full_name LIKE ? OR u.license_plate LIKE ?)');
+    params.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
   if (from) {
     conditions.push('p.scanned_at >= ?');

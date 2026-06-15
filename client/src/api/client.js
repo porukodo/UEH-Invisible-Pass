@@ -12,12 +12,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let onUnauthorized = null;
+
+/** Lets AuthContext clear its in-memory user when a request comes back 401. */
+export function setUnauthorizedHandler(fn) {
+  onUnauthorized = fn;
+}
+
 api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('uip_token');
       localStorage.removeItem('uip_user');
+      onUnauthorized?.();
     }
     return Promise.reject(err);
   }
