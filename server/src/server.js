@@ -1,4 +1,4 @@
-import { createApp } from './expressApp.js';
+import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { startTopupRetryJob } from './jobs/topupRetryJob.js';
 

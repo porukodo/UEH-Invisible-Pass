@@ -29,3 +29,11 @@ export function createApp() {
 
   return app;
 }
+
+// Vercel's zero-config Node builder scans for the file that imports `express`
+// and, for requests not covered by an explicit /api/* function, invokes that
+// file's default export directly (bypassing api/index.js and vercel.json's
+// rewrite). Without a default export here it crashed on "/" with "Invalid
+// export found ... default export must be a function or server". Exporting a
+// real app instance makes that implicit handler work correctly too.
+export default createApp();
