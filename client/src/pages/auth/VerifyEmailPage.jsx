@@ -6,7 +6,7 @@ import AuthLayout from './AuthLayout';
 export default function VerifyEmailPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const email = location.state?.email || '';
+  const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState(location.state?.devOtp || '');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -39,8 +39,19 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <AuthLayout title="Xác thực email" subtitle={`Mã OTP đã được gửi đến ${email}`}>
+    <AuthLayout title="Xác thực email" subtitle="Nhập email và mã OTP đã được gửi đến email của bạn">
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="text-xs font-bold text-slate-500">Email sinh viên</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="ten@st.ueh.edu.vn"
+            required
+            className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:border-ueh-green"
+          />
+        </div>
         <div>
           <label className="text-xs font-bold text-slate-500">Mã OTP (6 số)</label>
           <input
