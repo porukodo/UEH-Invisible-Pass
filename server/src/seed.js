@@ -10,7 +10,24 @@ const DEMO_PASSWORD = '123456';
 // To create accounts programmatically, add entries here (each is created with
 // email already verified and the password above) and run `npm run seed`:
 //   { mssv, fullName, email, role: 'student'|'staff'|'admin', licensePlate, topupBalance }
-const DEMO_USERS = [];
+const DEMO_USERS = [
+  // Admin accounts (already created in production via /api/cron/seed-admins).
+  // Kept here so they can be recreated locally or in a fresh environment.
+  {
+    mssv: '31231024973',
+    fullName: 'Nguyễn Hoàng',
+    email: 'hoangnguyen.31231024973+test1@st.ueh.edu.vn',
+    role: 'admin',
+    topupBalance: 0,
+  },
+  {
+    mssv: '31231024833',
+    fullName: 'Huỳnh Nhật Quang',
+    email: 'quanghuynh.31231024833+test1@st.ueh.edu.vn',
+    role: 'admin',
+    topupBalance: 0,
+  },
+];
 
 async function seed() {
   if (DEMO_USERS.length === 0) {

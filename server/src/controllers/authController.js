@@ -9,15 +9,24 @@ import {
   updateUnverifiedUser,
 } from '../models/userModel.js';
 import { createWallet } from '../models/walletModel.js';
-import { createOtp, findActiveOtp, consumeOtp } from '../models/otpModel.js';
+import { createOtp, findActiveOtp, consumeOtp, countRecentOtps } from '../models/otpModel.js';
 import { generateOtpCode, sendOtpEmail } from '../utils/mailer.js';
 import { generateTotpSecret } from '../utils/crypto.js';
 import { ApiError } from '../middleware/errorHandler.js';
 
 const STUDENT_EMAIL_DOMAIN = '@st.ueh.edu.vn';
 const OTP_TTL_MINUTES = 5;
+const OTP_RATE_WINDOW_MINUTES = 10;
+const OTP_RATE_LIMIT = 3; // max OTPs issued per user per purpose per window
 
 async function issueOtp(userId, email, purpose) {
+  // Brute-force / spam guard: cap how many OTPs can be issued in a rolling
+  // window. This covers both direct login calls and resend requests.
+  const recent = await countRecentOtps(userId, purpose, OTP_RATE_WINDOW_MINUTES);
+  if (recent >= OTP_RATE_LIMIT) {
+    throw new ApiError(429, `Quá nhiều yêu cầu OTP. Vui lòng thử lại sau ${OTP_RATE_WINDOW_MINUTES} phút.`);
+  }
+
   const code = generateOtpCode();
   const codeHash = await bcrypt.hash(code, 10);
   const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
@@ -106,7 +115,12 @@ export async function verifyEmail(req, res, next) {
     if (!otp) throw new ApiError(400, 'Mã OTP đã hết hạn, vui lòng yêu cầu gửi lại');
 
     const valid = await bcrypt.compare(code, otp.code_hash);
-    if (!valid) throw new ApiError(400, 'Mã OTP không đúng');
+    if (!valid) {
+      // Consume the OTP so this code can never be retried - the user must
+      // request a fresh one (rate-limited to 3 per 10 min).
+      await consumeOtp(otp.id);
+      throw new ApiError(400, 'Mã OTP không đúng. Vui lòng nhấn "Gửi lại" để nhận mã mới.');
+    }
 
     await consumeOtp(otp.id);
     await markEmailVerified(user.id);
@@ -156,7 +170,10 @@ export async function verifyLoginOtp(req, res, next) {
     if (!otp) throw new ApiError(400, 'Mã OTP đã hết hạn, vui lòng đăng nhập lại');
 
     const valid = await bcrypt.compare(code, otp.code_hash);
-    if (!valid) throw new ApiError(400, 'Mã OTP không đúng');
+    if (!valid) {
+      await consumeOtp(otp.id);
+      throw new ApiError(400, 'Mã OTP không đúng. Vui lòng nhấn "Gửi lại" để nhận mã mới.');
+    }
 
     await consumeOtp(otp.id);
 
