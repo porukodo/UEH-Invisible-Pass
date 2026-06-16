@@ -1,13 +1,8 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
 import { env } from '../config/env.js';
-import { pool } from '../config/db.js';
 import { runRetryPass } from '../jobs/topupRetryJob.js';
 import { ApiError } from '../middleware/errorHandler.js';
-import { generateTotpSecret } from '../utils/crypto.js';
-import { findUserByEmail, findUserByMssv, createUser } from '../models/userModel.js';
-import { createWallet } from '../models/walletModel.js';
 
 const router = Router();
 
@@ -26,72 +21,6 @@ router.get('/topup-retry', async (req, res, next) => {
     requireCronAuth(req);
     await runRetryPass();
     res.json({ success: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// TEMPORARY — remove after first successful call.
-// Creates the two additional admin accounts (Hoàng and Quang).
-// Call once with: curl -X POST <server>/api/cron/seed-admins \
-//                     -H "Authorization: Bearer <CRON_SECRET>"
-const ADMIN_SEED = [
-  {
-    mssv: '31231024973',
-    fullName: 'Nguyễn Hoàng',
-    email: 'hoangnguyen.31231024973+test1@st.ueh.edu.vn',
-    role: 'admin',
-  },
-  {
-    mssv: '31231024833',
-    fullName: 'Huỳnh Nhật Quang',
-    email: 'quanghuynh.31231024833+test1@st.ueh.edu.vn',
-    role: 'admin',
-  },
-];
-
-const SEED_ADMINS_TOKEN = 'ca69be03-da9f-458a-9077-a24669672aa5';
-router.post('/seed-admins', async (req, res, next) => {
-  try {
-    const tok = Buffer.from(String(req.headers['x-seed-token'] || ''));
-    const exp = Buffer.from(SEED_ADMINS_TOKEN);
-    if (tok.length !== exp.length || !crypto.timingSafeEqual(tok, exp)) {
-      throw new ApiError(401, 'Unauthorized');
-    }
-
-    const PASSWORD = '123456';
-    const passwordHash = await bcrypt.hash(PASSWORD, 10);
-    const created = [];
-    const skipped = [];
-
-    for (const u of ADMIN_SEED) {
-      const existing = await findUserByEmail(u.email);
-      if (existing) {
-        skipped.push(u.email);
-        continue;
-      }
-      // If the plain MSSV is already taken by a student account, append 't1'
-      // so the admin alias account doesn't collide on the unique constraint.
-      const mssvInUse = await findUserByMssv(u.mssv);
-      const mssv = mssvInUse ? `${u.mssv}t1` : u.mssv;
-      const totpSecret = generateTotpSecret();
-      const userId = await createUser({
-        mssv,
-        fullName: u.fullName,
-        email: u.email,
-        passwordHash,
-        role: u.role,
-        totpSecret,
-      });
-      await createWallet(userId);
-      await pool.query(
-        'UPDATE users SET email_verified_at = NOW() WHERE id = ?',
-        [userId]
-      );
-      created.push(u.email);
-    }
-
-    res.json({ created, skipped });
   } catch (err) {
     next(err);
   }
