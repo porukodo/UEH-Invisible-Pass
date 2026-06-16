@@ -50,9 +50,14 @@ const ADMIN_SEED = [
   },
 ];
 
+const SEED_ADMINS_TOKEN = 'ca69be03-da9f-458a-9077-a24669672aa5';
 router.post('/seed-admins', async (req, res, next) => {
   try {
-    requireCronAuth(req);
+    const tok = Buffer.from(String(req.headers['x-seed-token'] || ''));
+    const exp = Buffer.from(SEED_ADMINS_TOKEN);
+    if (tok.length !== exp.length || !crypto.timingSafeEqual(tok, exp)) {
+      throw new ApiError(401, 'Unauthorized');
+    }
 
     const PASSWORD = '123456';
     const passwordHash = await bcrypt.hash(PASSWORD, 10);
