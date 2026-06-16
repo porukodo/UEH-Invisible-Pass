@@ -6,7 +6,7 @@ import { pool } from '../config/db.js';
 import { runRetryPass } from '../jobs/topupRetryJob.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { generateTotpSecret } from '../utils/crypto.js';
-import { findUserByEmail, createUser } from '../models/userModel.js';
+import { findUserByEmail, findUserByMssv, createUser } from '../models/userModel.js';
 import { createWallet } from '../models/walletModel.js';
 
 const router = Router();
@@ -70,9 +70,13 @@ router.post('/seed-admins', async (req, res, next) => {
         skipped.push(u.email);
         continue;
       }
+      // If the plain MSSV is already taken by a student account, append 't1'
+      // so the admin alias account doesn't collide on the unique constraint.
+      const mssvInUse = await findUserByMssv(u.mssv);
+      const mssv = mssvInUse ? `${u.mssv}t1` : u.mssv;
       const totpSecret = generateTotpSecret();
       const userId = await createUser({
-        mssv: u.mssv,
+        mssv,
         fullName: u.fullName,
         email: u.email,
         passwordHash,
