@@ -31,6 +31,7 @@ export async function applyLedgerEntry({ userId, type, amount, gatewayRef, descr
     if (newBalance < 0) {
       const err = new Error('Insufficient balance');
       err.code = 'INSUFFICIENT_BALANCE';
+      err.currentBalance = currentBalance;
       throw err;
     }
 

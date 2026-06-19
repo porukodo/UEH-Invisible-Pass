@@ -125,27 +125,55 @@ CREATE TABLE gates (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------
+-- parking_sessions
+-- Links an entry scan to its corresponding exit scan.
+-- Fee is calculated at exit time based on session duration.
+-- FR15/16/17/18.
+-- ---------------------------------------------------------------
+CREATE TABLE parking_sessions (
+  id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id        INT UNSIGNED NOT NULL,
+  entry_gate_id  INT UNSIGNED NOT NULL,
+  exit_gate_id   INT UNSIGNED DEFAULT NULL,
+  entry_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  exit_at        DATETIME DEFAULT NULL,
+  fee            DECIMAL(12,2) DEFAULT NULL,
+  transaction_id BIGINT UNSIGNED DEFAULT NULL,
+  status         ENUM('open','closed') NOT NULL DEFAULT 'open',
+  PRIMARY KEY (id),
+  KEY idx_ps_user_status (user_id, status),
+  KEY idx_ps_entry_at (entry_at),
+  CONSTRAINT fk_ps_user        FOREIGN KEY (user_id)        REFERENCES users(id)        ON DELETE CASCADE,
+  CONSTRAINT fk_ps_entry_gate  FOREIGN KEY (entry_gate_id)  REFERENCES gates(id),
+  CONSTRAINT fk_ps_exit_gate   FOREIGN KEY (exit_gate_id)   REFERENCES gates(id),
+  CONSTRAINT fk_ps_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------
 -- parking_logs
--- Each successful gate scan -> fee charge. FR15/16/17/18/21/23.
+-- Individual gate scan events. session_id links entry and exit
+-- events to their parking_sessions row. FR15/16/17/18/21/23.
 -- ---------------------------------------------------------------
 CREATE TABLE parking_logs (
   id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id        INT UNSIGNED NOT NULL,
   gate_id        INT UNSIGNED NOT NULL,
-  transaction_id BIGINT UNSIGNED DEFAULT NULL,   -- NULL if charge failed (insufficient balance)
+  session_id     BIGINT UNSIGNED DEFAULT NULL,
+  transaction_id BIGINT UNSIGNED DEFAULT NULL,
   fee            DECIMAL(12,2) NOT NULL,
-  result         ENUM('success','insufficient_balance','invalid_token','duplicate_token') NOT NULL,
+  result         ENUM(
+                   'success','insufficient_balance','invalid_token',
+                   'duplicate_token','already_parked','no_session'
+                 ) NOT NULL,
   scanned_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_parking_logs_user (user_id),
   KEY idx_parking_logs_gate (gate_id),
+  KEY idx_parking_logs_session (session_id),
   KEY idx_parking_logs_scanned_at (scanned_at),
-  CONSTRAINT fk_parking_logs_user FOREIGN KEY (user_id) REFERENCES users(id)
-    ON DELETE CASCADE,
-  CONSTRAINT fk_parking_logs_gate FOREIGN KEY (gate_id) REFERENCES gates(id)
-    ON DELETE CASCADE,
-  CONSTRAINT fk_parking_logs_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id)
-    ON DELETE SET NULL
+  CONSTRAINT fk_parking_logs_user        FOREIGN KEY (user_id)        REFERENCES users(id)        ON DELETE CASCADE,
+  CONSTRAINT fk_parking_logs_gate        FOREIGN KEY (gate_id)        REFERENCES gates(id)        ON DELETE CASCADE,
+  CONSTRAINT fk_parking_logs_transaction FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------
