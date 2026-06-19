@@ -39,17 +39,26 @@ router.post('/run-migration', async (req, res, next) => {
 
     const steps = [];
 
-    // 1. Extend parking_logs result enum + add session_id column
+    // 1a. Extend parking_logs result enum + add session_id column
     await pool.query(`
       ALTER TABLE parking_logs
         MODIFY COLUMN result ENUM(
           'success','insufficient_balance','invalid_token','duplicate_token',
           'already_parked','no_session'
         ) NOT NULL,
-        ADD COLUMN IF NOT EXISTS session_id BIGINT UNSIGNED DEFAULT NULL,
-        ADD KEY IF NOT EXISTS idx_pl_session (session_id)
+        ADD COLUMN IF NOT EXISTS session_id BIGINT UNSIGNED DEFAULT NULL
     `);
-    steps.push('parking_logs altered');
+    steps.push('parking_logs column added');
+
+    // 1b. Add index on session_id (separate statement; TiDB rejects IF NOT EXISTS on KEY in same ALTER)
+    try {
+      await pool.query('ALTER TABLE parking_logs ADD KEY idx_pl_session (session_id)');
+      steps.push('parking_logs index added');
+    } catch (e) {
+      if (e.code === 'ER_DUP_KEYNAME') {
+        steps.push('parking_logs index already exists (skipped)');
+      } else throw e;
+    }
 
     // 2. Create parking_sessions table
     await pool.query(`
