@@ -21,6 +21,163 @@ server/    Express API + MySQL models
 database/  schema.sql (run once to create the database and tables)
 ```
 
+## Setting up your own deployment (step-by-step for beginners)
+
+This guide walks you through creating every account and service the app
+needs, from zero. You do not need to understand the code — just follow
+each step in order.
+
+> **What you will create:** a cloud database (TiDB Cloud), two hosting
+> projects (Vercel), an email sender (Gmail), and a payment receiver
+> (SePay). Everything has a free tier.
+
+---
+
+### Step 1 — Create a TiDB Cloud account (the database)
+
+All student data, wallets, and parking records live here.
+
+1. Go to [tidbcloud.com](https://tidbcloud.com) and sign up with Google.
+2. Click **Create Cluster → Serverless** (free, no credit card needed).
+3. Choose region **Singapore** (closest to Vietnam) and click **Create**.
+4. Once it finishes, click **Connect**. Choose **MySQL CLI** from the
+   dropdown. Copy the host, username, password, and database name shown
+   — you will paste these into Vercel later.
+5. Open a SQL client (e.g. [TablePlus](https://tableplus.com), free tier)
+   and connect using those details. TiDB Cloud requires TLS — check the
+   "Use SSL" box if your client asks.
+6. In TablePlus, click **Import** → select the file `database/schema.sql`
+   from this project and run it. This creates all the tables the app needs.
+
+---
+
+### Step 2 — Create a Vercel account (the hosting)
+
+Vercel runs both the server and the website. One account hosts both.
+
+1. Go to [vercel.com](https://vercel.com) and sign up with GitHub.
+2. You will create **two separate projects** in later steps — one for
+   `server/` and one for `client/`.
+
+---
+
+### Step 3 — Set up a Gmail app password (for OTP emails)
+
+The app sends one-time passwords to students by email.
+
+1. Go to your Google account → **Security → 2-Step Verification** and
+   turn it on if it isn't already.
+2. Then go to **Security → App passwords**, create a new one called
+   "UEH Invisible Pass", and copy the 16-character password shown.
+3. Note down your full Gmail address (e.g. `yourname@gmail.com`).
+
+---
+
+### Step 4 — Deploy the server to Vercel
+
+1. In the Vercel dashboard, click **Add New → Project**.
+2. Import your GitHub repository. When asked for the **Root Directory**,
+   type `server` and click **Continue**.
+3. Before deploying, click **Environment Variables** and add each row
+   from the table below. Every row is required.
+
+| Variable | What to put |
+|---|---|
+| `DB_HOST` | The host from TiDB Cloud Step 1 (e.g. `gateway01.ap-southeast-1.prod.aws.tidbcloud.com`) |
+| `DB_PORT` | `4000` |
+| `DB_USER` | The username from TiDB Cloud |
+| `DB_PASSWORD` | The password from TiDB Cloud |
+| `DB_NAME` | The database name from TiDB Cloud (e.g. `ueh_invisible_pass`) |
+| `DB_SSL` | `true` |
+| `JWT_SECRET` | Any long random string — go to [randomkeygen.com](https://randomkeygen.com) and copy a "256-bit WEP Key" |
+| `JWT_EXPIRES_IN` | `2h` |
+| `CLIENT_ORIGIN` | Leave blank for now — you will fill this after Step 5 |
+| `SMTP_HOST` | `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_SECURE` | `true` |
+| `SMTP_USER` | Your Gmail address |
+| `SMTP_PASS` | The 16-character app password from Step 3 |
+| `SMTP_FROM` | `UEH Invisible Pass <yourname@gmail.com>` |
+| `VIETQR_BANK_ID` | Your bank's ID from [vietqr.io/danh-sach-ngan-hang](https://vietqr.io/danh-sach-ngan-hang) (e.g. `970415` for Vietinbank) |
+| `VIETQR_ACCOUNT_NO` | Your bank account number |
+| `VIETQR_ACCOUNT_NAME` | Your account name as shown on your bank card |
+| `GATE_HMAC_SECRET` | Any long random string (go to [randomkeygen.com](https://randomkeygen.com)) |
+| `QR_AES_KEY` | Exactly 64 hex characters — run `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` in a terminal, or use a 256-bit key from [randomkeygen.com](https://randomkeygen.com) |
+| `SEPAY_API_KEY` | From your SePay account (Step 6) — leave blank for now |
+| `CRON_SECRET` | Any random string — copy another one from [randomkeygen.com](https://randomkeygen.com) |
+
+4. Click **Deploy**. Wait for it to finish. Copy the URL shown (e.g.
+   `https://your-project-name.vercel.app`) — this is your **server URL**.
+
+---
+
+### Step 5 — Deploy the client to Vercel
+
+1. In Vercel, click **Add New → Project** again.
+2. Import the same GitHub repository. This time set **Root Directory** to
+   `client`.
+3. Add these environment variables:
+
+| Variable | What to put |
+|---|---|
+| `VITE_API_URL` | Your server URL from Step 4 (e.g. `https://your-project-name.vercel.app`) |
+| `VITE_QR_AES_KEY` | The same 64-character key you used for `QR_AES_KEY` in Step 4 |
+| `VITE_GATE_HMAC_SECRET` | The same string you used for `GATE_HMAC_SECRET` in Step 4 |
+
+4. Click **Deploy**. Copy the client URL when it finishes (e.g.
+   `https://your-client-name.vercel.app`) — this is the address students
+   open in their browser.
+
+5. Go back to the **server** project in Vercel → **Settings →
+   Environment Variables** → find `CLIENT_ORIGIN` and set its value to
+   your client URL from above. Then redeploy the server (click
+   **Deployments → the latest one → Redeploy**).
+
+---
+
+### Step 6 — Set up SePay (automatic payment confirmation)
+
+SePay watches your bank account and tells the app when a student's
+transfer arrives so the wallet is topped up automatically.
+
+1. Register at [sepay.vn](https://sepay.vn). Add your bank account.
+2. In the SePay dashboard, find your **API key** and copy it.
+   - Paste it into the server's `SEPAY_API_KEY` environment variable on
+     Vercel, then redeploy the server.
+3. In SePay, set the **Webhook URL** to:
+   ```
+   https://<your-server-url>/api/wallet/webhook
+   ```
+4. Set the webhook **Authorization header** to:
+   ```
+   Apikey <your-SEPAY_API_KEY>
+   ```
+   (Replace `<your-SEPAY_API_KEY>` with the same key you pasted in step 2.)
+
+---
+
+### Step 7 — Create the first admin account
+
+The app has no admin user until you create one manually.
+
+1. Open the client URL in your browser and register a normal account.
+2. Connect to TiDB Cloud with TablePlus, then run:
+   ```sql
+   UPDATE users SET role = 'admin' WHERE email = 'your-email@st.ueh.edu.vn';
+   ```
+3. Log out and back in. You will now see the admin dashboard.
+
+---
+
+### Done
+
+Your deployment is complete. Bookmark:
+- **Student app:** your client URL
+- **Database:** [tidbcloud.com](https://tidbcloud.com) (to view raw data)
+- **Hosting dashboard:** [vercel.com](https://vercel.com) (to redeploy or change env vars)
+
+---
+
 ## Local development
 
 ### 1. Database
