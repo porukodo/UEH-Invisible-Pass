@@ -9,7 +9,7 @@
 USE ueh_invisible_pass;
 
 INSERT INTO gates (id, name, location, type, status) VALUES
-  (1, 'Cong A - Vao', 'Co so A', 'entry', 'online'),
-  (2, 'Cong A - Ra', 'Co so A', 'exit', 'online'),
-  (3, 'Cong B - Vao', 'Co so B', 'entry', 'online'),
-  (4, 'Cong B - Ra', 'Co so B', 'exit', 'online');
+  (1, 'Cổng A', 'Cơ sở A', 'entry', 'online'),
+  (2, 'Cổng A', 'Cơ sở A', 'exit', 'online'),
+  (3, 'Cổng B', 'Cơ sở B', 'entry', 'online'),
+  (4, 'Cổng B', 'Cơ sở B', 'exit', 'online');

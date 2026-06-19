@@ -38,9 +38,11 @@ export async function updateUnverifiedUser(id, { mssv, fullName, email, password
 
 export async function searchUsers({ q }) {
   const [rows] = await pool.query(
-    `SELECT id, mssv, full_name, email, role, license_plate, status
-     FROM users
-     WHERE mssv LIKE ? OR license_plate LIKE ? OR full_name LIKE ?
+    `SELECT u.id, u.mssv, u.full_name, u.email, u.role, u.license_plate, u.status,
+            COALESCE(w.balance, 0) AS balance
+     FROM users u
+     LEFT JOIN wallets w ON w.user_id = u.id
+     WHERE u.mssv LIKE ? OR u.license_plate LIKE ? OR u.full_name LIKE ?
      LIMIT 50`,
     [`%${q}%`, `%${q}%`, `%${q}%`]
   );
