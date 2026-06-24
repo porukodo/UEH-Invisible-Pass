@@ -3,6 +3,10 @@ import crypto from 'crypto';
 import { env } from '../config/env.js';
 import { pool } from '../config/db.js';
 import { runRetryPass } from '../jobs/topupRetryJob.js';
+import { findUserByMssv } from '../models/userModel.js';
+import { getWallet } from '../models/walletModel.js';
+import { forceCloseOpenSessions, listOpenSessions } from '../models/parkingModel.js';
+import { calculateFee } from '../utils/feeCalculator.js';
 import { ApiError } from '../middleware/errorHandler.js';
 
 const router = Router();
@@ -84,6 +88,55 @@ router.post('/cleanup-entry-charges', async (req, res, next) => {
     `);
 
     res.json({ refunded: entryCharges.length, deleted, gatesFixed: 4 });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// TEMPORARY — remove after fixing stuck parking sessions.
+router.post('/force-close-session', async (req, res, next) => {
+  try {
+    const tok = Buffer.from(String(req.headers['x-cleanup-token'] || ''));
+    const exp = Buffer.from(CLEANUP_TOKEN);
+    if (tok.length !== exp.length || !crypto.timingSafeEqual(tok, exp)) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+
+    const { mssv } = req.body;
+    if (!mssv) throw new ApiError(400, 'Thiếu MSSV');
+
+    const user = await findUserByMssv(mssv);
+    if (!user) throw new ApiError(404, 'Không tìm thấy sinh viên');
+
+    const wallet = await getWallet(user.id);
+    const openSessions = await listOpenSessions(user.id);
+    const exitFees = openSessions.map((s) => ({
+      sessionId: s.id,
+      entryAt: s.entry_at,
+      exitFeeNow: calculateFee(new Date(s.entry_at)),
+    }));
+
+    const [recentLogs] = await pool.query(
+      `SELECT pl.result, pl.fee, pl.scanned_at, g.type AS gate_type, g.name AS gate_name
+       FROM parking_logs pl
+       JOIN gates g ON g.id = pl.gate_id
+       WHERE pl.user_id = ?
+       ORDER BY pl.scanned_at DESC
+       LIMIT 5`,
+      [user.id]
+    );
+
+    const closed = await forceCloseOpenSessions(user.id);
+
+    res.json({
+      mssv: user.mssv,
+      fullName: user.full_name,
+      balance: wallet ? Number(wallet.balance) : 0,
+      openSessionsBefore: openSessions,
+      exitFeesIfCheckedOutNow: exitFees,
+      recentParkingLogs: recentLogs,
+      closed,
+    });
   } catch (err) {
     next(err);
   }

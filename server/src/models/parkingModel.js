@@ -34,6 +34,28 @@ export async function closeSession({ sessionId, exitGateId, fee, transactionId }
   );
 }
 
+export async function listOpenSessions(userId) {
+  const [rows] = await pool.query(
+    `SELECT * FROM parking_sessions WHERE user_id = ? AND status = 'open' ORDER BY id`,
+    [userId]
+  );
+  return rows;
+}
+
+/** Staff recovery: close stuck open sessions without charging the wallet. */
+export async function forceCloseOpenSessions(userId) {
+  const open = await listOpenSessions(userId);
+  if (!open.length) return [];
+
+  const [result] = await pool.query(
+    `UPDATE parking_sessions
+     SET status = 'closed', exit_at = NOW(), fee = 0, exit_gate_id = NULL, transaction_id = NULL
+     WHERE user_id = ? AND status = 'open'`,
+    [userId]
+  );
+  return { sessions: open, closedCount: result.affectedRows };
+}
+
 export async function searchParkingLogs({ q, from, to }) {
   const conditions = [];
   const params = [];
