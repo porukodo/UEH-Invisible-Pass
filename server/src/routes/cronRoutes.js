@@ -122,7 +122,16 @@ router.post('/force-close-session', async (req, res, next) => {
        JOIN gates g ON g.id = pl.gate_id
        WHERE pl.user_id = ?
        ORDER BY pl.scanned_at DESC
-       LIMIT 5`,
+       LIMIT 10`,
+      [user.id]
+    );
+
+    const [allSessions] = await pool.query(
+      `SELECT id, entry_gate_id, exit_gate_id, entry_at, exit_at, fee, status
+       FROM parking_sessions
+       WHERE user_id = ?
+       ORDER BY id DESC
+       LIMIT 10`,
       [user.id]
     );
 
@@ -131,9 +140,12 @@ router.post('/force-close-session', async (req, res, next) => {
     res.json({
       mssv: user.mssv,
       fullName: user.full_name,
+      userId: user.id,
+      status: user.status,
       balance: wallet ? Number(wallet.balance) : 0,
       openSessionsBefore: openSessions,
       exitFeesIfCheckedOutNow: exitFees,
+      allSessions,
       recentParkingLogs: recentLogs,
       closed,
     });
