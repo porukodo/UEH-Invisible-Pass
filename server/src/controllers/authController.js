@@ -19,6 +19,13 @@ const OTP_TTL_MINUTES = 5;
 const OTP_RATE_WINDOW_MINUTES = 10;
 const OTP_RATE_LIMIT = 3; // max OTPs issued per user per purpose per window
 
+// Demo accounts that skip OTP during login so reviewers can access the app
+// without needing access to the email inbox.
+const OTP_BYPASS_EMAILS = new Set([
+  'phatbui.31231023065+test1@st.ueh.edu.vn',
+  'phatbui.31231023065@st.ueh.edu.vn',
+]);
+
 async function issueOtp(userId, email, purpose) {
   // Brute-force / spam guard: cap how many OTPs can be issued in a rolling
   // window. This covers both direct login calls and resend requests.
@@ -149,6 +156,23 @@ export async function login(req, res, next) {
         requiresVerification: true,
         email: user.email,
         ...devOtpPayload(code),
+      });
+    }
+
+    if (OTP_BYPASS_EMAILS.has(user.email)) {
+      const token = signAccessToken(user);
+      return res.json({
+        otpBypassed: true,
+        token,
+        user: {
+          id: user.id,
+          mssv: user.mssv,
+          fullName: user.full_name,
+          email: user.email,
+          role: user.role,
+          licensePlate: user.license_plate,
+          totpSecret: user.totp_secret,
+        },
       });
     }
 

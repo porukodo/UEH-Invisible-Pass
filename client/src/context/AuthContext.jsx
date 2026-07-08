@@ -33,7 +33,11 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const { data } = await api.post('/auth/login', { email, password });
-    return data; // { message, email } - caller proceeds to OTP step
+    if (data.otpBypassed) {
+      localStorage.setItem('uip_token', data.token);
+      setUser(data.user);
+    }
+    return data;
   }
 
   async function verifyLoginOtp(email, code) {

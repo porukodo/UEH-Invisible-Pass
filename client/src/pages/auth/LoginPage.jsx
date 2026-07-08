@@ -18,6 +18,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const res = await login(email, password);
+      if (res.otpBypassed) {
+        navigate(res.user.role === 'student' ? '/qr' : '/admin', { replace: true });
+        return;
+      }
       navigate('/verify-login-otp', { state: { email, devOtp: res?.devOtp } });
     } catch (err) {
       const data = err.response?.data;
